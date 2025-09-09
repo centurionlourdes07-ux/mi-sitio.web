@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mi Tienda Online - Venta de Productos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-color: #f9fafb;
+            --text-color: #111827;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+            --primary-color: #a8dadc;
+            --primary-hover: #457b9d;
+            --hero-bg-start: #a8dadc;
+            --hero-bg-end: #457b9d;
+        }
+
+        .dark-mode {
+            --bg-color: #1f2937;
+            --text-color: #f9fafb;
+            --card-bg: #374151;
+            --border-color: #4b5563;
+            --primary-color: #1e40af;
+            --primary-hover: #3b82f6;
+            --hero-bg-start: #1e293b;
+            --hero-bg-end: #0f172a;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .hero-bg {
+            background: linear-gradient(135deg, var(--hero-bg-start) 0%, var(--hero-bg-end) 100%);
+            position: relative;
+        }
+
+        .product-card {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s, transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .primary-color {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+        }
+
+        .primary-color:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .toggle-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .toggle-button:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 1s ease-out;
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <header class="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-20 transition-colors duration-300">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-primary dark:text-white">Mi Tienda Online</h1>
+            <ul class="hidden md:flex space-x-6">
+                <li><a href="#inicio" class="text-primary hover:text-primary-hover dark:text-gray-300 dark:hover:text-white transition">Inicio</a></li>
+                <li><a href="#productos" class="text-primary hover:text-primary-hover dark:text-gray-300 dark:hover:text-white transition">Productos</a></li>
+                <li><a href="#contacto" class="text-primary hover:text-primary-hover dark:text-gray-300 dark:hover:text-white transition">Contacto</a></li>
+            </ul>
+            <div class="flex items-center space-x-4">
+                <button class="md:hidden text-primary dark:text-white" onclick="toggleMenu()">☰</button>
+                <button id="theme-toggle" class="toggle-button text-primary dark:text-gray-300" title="Cambiar Tema">🌙</button>
+                <button id="cart-button" class="relative">
+                    🛒 <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1">0</span>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden bg-white dark:bg-gray-800 border-t dark:border-gray-600">
+            <ul class="py-4 px-4 space-y-2">
+                <li><a href="#inicio" class="block text-primary dark:text-gray-300 dark:hover:text-white">Inicio</a></li>
+                <li><a href="#productos" class="block text-primary dark:text-gray-300 dark:hover:text-white">Productos</a></li>
+                <li><a href="#contacto" class="block text-primary dark:text-gray-300 dark:hover:text-white">Contacto</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4 transition-colors duration-300">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">Carrito de Compras</h3>
+                <button onclick="closeCart()">✖</button>
+            </div>
+            <div id="cart-items" class="text-gray-700 dark:text-gray-300"></div>
+            <div class="mt-4 border-t border-gray-300 dark:border-gray-600 pt-4">
+                <p class="text-lg font-bold text-gray-800 dark:text-gray-100">Total: $<span id="cart-total">0</span></p>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Método de Pago</label>
+                    <select id="payment-method" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100">
+                        <option value="credit-card">Tarjeta de Crédito</option>
+                        <option value="debit-card">Tarjeta de Débito</option>
+                        <option value="transfer">Transferencia Bancaria</option>
+                        <option value="paypal">PayPal</option>
+                    </select>
+                </div>
+                <div id="payment-form" class="space-y-2">
+                    <input type="text" placeholder="Nombre en la tarjeta" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100" />
+                    <input type="text" placeholder="Número de tarjeta" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100" />
+                    <div class="flex space-x-2">
+                        <input type="text" placeholder="MM/YY" class="w-1/2 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100" />
+                        <input type="text" placeholder="CVV" class="w-1/2 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100" />
+                    </div>
+                </div>
+                <button onclick="checkout()" class="w-full primary-color text-white py-3 rounded-lg mt-4 transition-colors duration-300">Finalizar Compra</button>
+            </div>
+        </div>
+    </div>
+
+    <section id="inicio" class="hero-bg h-screen flex items-center justify-center text-center text-gray-800 dark:text-gray-100">
+        <div class="hero-content px-4 fade-in-up">
+            <h2 class="text-5xl md:text-6xl font-bold mb-4">¡Bienvenido a Mi Tienda!</h2>
+            <p class="text-xl md:text-2xl mb-8">Descubre productos únicos y compra cómodamente desde Amazon</p>
+            <a href="#productos" class="primary-color px-8 py-4 rounded-full text-lg transition duration-300">Ver Productos</a>
+        </div>
+    </section>
+
+    <section id="productos" class="py-20 bg-gray-100 dark:bg-gray-700 transition-colors duration-300">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center text-gray-800 dark:text-gray-100 mb-12">Nuestros Productos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="product-card p-6 rounded-lg shadow-lg">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/ace393e0-1b27-4e06-950b-d0bef57b628d.png" alt="Camiseta blanca personalizada con logo negro y patrón geométrico, ideal para uso diario y disponible en varias tallas en Amazon" class="w-full h-48 object-cover rounded mb-4" onerror="this.style.display='none'" />
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Camiseta Personalizada</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">Camiseta cómoda con diseño único para tu estilo diario.</p>
+                    <p class="text-lg font-semibold text-primary dark:text-gray-300 mb-4">$25.99</p>
+                    <button onclick="addToCart('Camiseta Personalizada', 25.99)" class="primary-color text-white px-6 py-2 rounded-full mr-2">Agregar al Carrito</button>
+                    <a href="https://www.amazon.com/producto-camiseta-personalizada" target="_blank" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-full inline-block transition duration-300">Ver en Amazon</a>
+                </div>
+                <div class="product-card p-6 rounded-lg shadow-lg">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/83f8e6d2-08db-483a-8235-1f704140bd78.png" alt="Taza cerámica negra con ilustración colorida de paisaje urbano, perfecta para café o té y vendida en Amazon" class="w-full h-48 object-cover rounded mb-4" onerror="this.style.display='none'" />
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Taza Personalizada</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">Taza elegante para tu bebida favorita con diseño creativo.</p>
+                    <p class="text-lg font-semibold text-primary dark:text-gray-300 mb-4">$12.99</p>
+                    <button onclick="addToCart('Taza Personalizada', 12.99)" class="primary-color text-white px-6 py-2 rounded-full mr-2">Agregar al Carrito</button>
+                    <a href="https://www.amazon.com/producto-taza-personalizada" target="_blank" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-full inline-block transition duration-300">Ver en Amazon</a>
+                </div>
+                <div class="product-card p-6 rounded-lg shadow-lg">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/5df74ec9-4c99-4f84-aa33-e8ec7cef79f8.png" alt="Mochila azul resistente con compartimentos exteriores e interiores, con broche personalizable y disponible en Amazon" class="w-full h-48 object-cover rounded mb-4" onerror="this.style.display='none'" />
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Mochila Personalizada</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">Mochila duradera perfecta para viajes o diario.</p>
+                    <p class="text-lg font-semibold text-primary dark:text-gray-300 mb-4">$45.99</p>
+                    <button onclick="addToCart('Mochila Personalizada', 45.99)" class="primary-color text-white px-6 py-2 rounded-full mr-2">Agregar al Carrito</button>
+                    <a href="https://www.amazon.com/producto-mochila-personalizada" target="_blank" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-full inline-block transition duration-300">Ver en Amazon</a>
+                </div>
+                <div class="product-card p-6 rounded-lg shadow-lg">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/e3b29c7b-b7c7-470b-bbd9-9f6f5f2d48e8.png" alt="Llavero metálico plateado con colgante en forma de corazón y grabado personalizado, vendido en paquetes en Amazon" class="w-full h-48 object-cover rounded mb-4" onerror="this.style.display='none'" />
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Llavero Personalizado</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">Detalles únicos para expresar tu estilo.</p>
+                    <p class="text-lg font-semibold text-primary dark:text-gray-300 mb-4">$8.99</p>
+                    <button onclick="addToCart('Llavero Personalizado', 8.99)" class="primary-color text-white px-6 py-2 rounded-full mr-2">Agregar al Carrito</button>
+                    <a href="https://www.amazon.com/producto-llavero-personalizado" target="_blank" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-full inline-block transition duration-300">Ver en Amazon</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contacto" class="py-20 bg-white dark:bg-gray-800 transition-colors duration-300">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-8">Contacto</h2>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">¿Preguntas sobre nuestros productos? Envíanos un mensaje.</p>
+            <form class="max-w-md mx-auto space-y-4">
+                <input type="email" placeholder="Tu Email" class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100" required />
+                <textarea placeholder="Mensaje" rows="4" class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100" required></textarea>
+                <button type="submit" class="primary-color text-white px-8 py-4 rounded-full transition duration-300">Enviar</button>
+            </form>
+        </div>
+    </section>
+
+    <footer class="bg-gray-800 dark:bg-gray-900 text-white py-8 transition-colors duration-300">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2024 Mi Tienda Online. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        let cart = [];
+        let total = 0;
+
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('theme-toggle').innerText = '☀️';
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                themeButton.innerText = '☀️';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeButton.innerText = '🌙';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+        function toggleMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function addToCart(name, price) {
+            cart.push({name, price});
+            total += price;
+            updateCart();
+            alert('Producto agregado al carrito');
+        }
+
+        function updateCart() {
+            document.getElementById('cart-count').textContent = cart.length;
+            document.getElementById('cart-total').textContent = total.toFixed(2);
+            const cartItems = document.getElementById('cart-items');
+            cartItems.innerHTML = cart.map(item => `<p>${item.name} - $${item.price}</p>`).join('');
+        }
+
+        document.getElementById('cart-button').addEventListener('click', function() {
+            document.getElementById('cart-modal').classList.remove('hidden');
+            document.getElementById('cart-modal').classList.add('flex');
+            updateCart();
+        });
+
+        function closeCart() {
+            document.getElementById('cart-modal').classList.add('hidden');
+            document.getElementById('cart-modal').classList.remove('flex');
+        }
+
+        function checkout() {
+            const method = document.getElementById('payment-method').value;
+            alert(`Compra finalizada con ${method}. Total: $${total.toFixed(2)}. (Esto es una simulación; en un sitio real, aquí procesarías el pago.)`);
+            cart = [];
+            total = 0;
+            updateCart();
+            closeCart();
+        }
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // Fade in on scroll
+        window.addEventListener('scroll', () => {
+            const elements = document.querySelectorAll('.product-card');
+            elements.forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 100) {
+                    el.classList.add('fade-in-up');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+</content>
+</create_file>
